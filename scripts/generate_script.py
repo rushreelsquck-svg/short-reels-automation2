@@ -19,7 +19,7 @@ import anthropic
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-SYSTEM_PROMPT = """You write scripts for a daily YouTube Shorts channel called Coin Loop,
+SYSTEM_PROMPT = """You write scripts for a daily YouTube Shorts channel called The Uptick,
 covering trending money, personal finance, investing, and side-hustle news.
 
 Rules:
