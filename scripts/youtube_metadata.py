@@ -42,7 +42,7 @@ def build_final_metadata(script_package: dict, trending_keywords: list[str], top
     description = "\n".join(p for p in description_parts if p)[:MAX_DESCRIPTION_CHARS]
 
     # tags = the story-specific tags first (most relevant), then trending keywords as filler
-    combined_tags = _dedupe_preserve_order(script_package.get("tags", []) + trending_keywords + ["shorts", "news", "trending"])
+    combined_tags = _dedupe_preserve_order(script_package.get("tags", []) + trending_keywords + ["shorts", "money", "finance", "personalfinance"])
 
     final_tags = []
     char_budget = MAX_TAGS_CHARS

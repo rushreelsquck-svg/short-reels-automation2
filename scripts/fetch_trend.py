@@ -11,10 +11,15 @@ Why Google News RSS instead of scraping a "trending" site:
 STATE_SUFFIX env var lets multiple channels share this same codebase without
 sharing "already used" history — e.g. STATE_SUFFIX=_channel2 tracks state in
 state/used_topics_channel2.json instead of state/used_topics.json.
+
+NEWS_TOPIC_QUERY env var narrows the feed to a niche instead of general top
+stories — e.g. "personal finance OR investing OR side hustle OR money saving
+tips" for a finance channel. Leave unset for general top headlines.
 """
 import json
 import os
 import re
+import urllib.parse
 from pathlib import Path
 
 import feedparser
@@ -43,13 +48,17 @@ def _clean_title(raw_title):
     return re.sub(r"\s+-\s+[^-]+$", "", raw_title).strip()
 
 
-def get_trending_topic(region="US", language="en"):
+def get_trending_topic(region="US", language="en", topic_query=None):
     """Returns a dict: {title, summary, link, source} for the top unused trending story."""
-    url = f"https://news.google.com/rss?hl={language}-{region}&gl={region}&ceid={region}:{language}"
+    if topic_query:
+        q = urllib.parse.quote(topic_query)
+        url = f"https://news.google.com/rss/search?q={q}&hl={language}-{region}&gl={region}&ceid={region}:{language}"
+    else:
+        url = f"https://news.google.com/rss?hl={language}-{region}&gl={region}&ceid={region}:{language}"
     feed = feedparser.parse(url)
 
     if not feed.entries:
-        raise RuntimeError("Google News RSS returned no entries — check region/language codes.")
+        raise RuntimeError("Google News RSS returned no entries — check region/language codes or topic query.")
 
     used = _load_used_topics()
 
@@ -76,5 +85,6 @@ if __name__ == "__main__":
     topic = get_trending_topic(
         region=os.environ.get("NEWS_REGION", "US"),
         language=os.environ.get("NEWS_LANGUAGE", "en"),
+        topic_query=os.environ.get("NEWS_TOPIC_QUERY"),
     )
     print(json.dumps(topic, indent=2))

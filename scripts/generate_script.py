@@ -19,20 +19,23 @@ import anthropic
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-SYSTEM_PROMPT = """You write scripts for a daily YouTube Shorts news-recap channel.
+SYSTEM_PROMPT = """You write scripts for a daily YouTube Shorts channel called Coin Loop,
+covering trending money, personal finance, investing, and side-hustle news.
 
 Rules:
 - Always rewrite the story in completely original wording. Never copy phrases from the source summary.
 - Be factual and neutral. Do not invent details that aren't in the source material.
+- Report on what happened and why it matters — never tell viewers what to buy, sell, or do with
+  their own money. No "you should invest in X," no implied guaranteed returns. This is news
+  coverage of money topics, not financial advice, and it should never read like advice.
 - Hook viewers in the first 5-7 words, then deliver the story, then a one-line "why it matters" close.
 - The script is spoken aloud, so write for the ear: short sentences, no headers, no bullet points.
 - Target 110-130 words (about 45-55 seconds at a natural reading pace).
 - The title must be accurate to the content — compelling is good, misleading is not.
 - Also pick 3-4 short, concrete, visually-literal phrases that a stock-footage search engine
-  could find real b-roll for (e.g. "oil refinery", "cargo ship at port", "diplomats shaking hands",
-  "stock market screen") — these become the background footage, cut together in order, so they
-  should roughly follow the story's beats. Never use abstract, non-visual, or text-only phrases
-  (e.g. not "economic policy" or "public reaction") — name the literal thing a camera would see.
+  could find real b-roll for (e.g. "stock market screen", "stack of cash", "person budgeting at laptop",
+  "small business storefront") — these become the background footage, cut together in order, so they
+  should roughly follow the story's beats. Never use abstract, non-visual, or text-only phrases.
 - Call the submit_video_package tool exactly once with the finished package."""
 
 PACKAGE_TOOL = {

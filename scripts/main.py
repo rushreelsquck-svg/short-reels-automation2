@@ -24,9 +24,10 @@ WORKDIR = Path("/tmp/trend_short_run")
 def run():
     region = os.environ.get("NEWS_REGION", "US")
     language = os.environ.get("NEWS_LANGUAGE", "en")
+    topic_query = os.environ.get("NEWS_TOPIC_QUERY")
 
-    print(f"[1/6] Fetching today's trending topic ({region}/{language})...")
-    topic = get_trending_topic(region=region, language=language)
+    print(f"[1/6] Fetching today's trending topic ({region}/{language})" + (f', query="{topic_query}"' if topic_query else "") + "...")
+    topic = get_trending_topic(region=region, language=language, topic_query=topic_query)
     print(f"      -> {topic['title']}")
 
     print("[2/6] Fetching real YouTube trending keywords for hashtag enrichment...")

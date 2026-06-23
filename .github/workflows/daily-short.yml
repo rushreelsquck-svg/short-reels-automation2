@@ -1,4 +1,4 @@
-name: Daily Trending Short
+name: Coin Loop - Daily Money Trend
 
 on:
   schedule:
@@ -40,6 +40,7 @@ jobs:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           NEWS_REGION: "US"
           NEWS_LANGUAGE: "en"
+          NEWS_TOPIC_QUERY: "personal finance OR investing OR side hustle OR money saving tips OR passive income"
           YT_CATEGORY_ID: "25"
           YT_PRIVACY_STATUS: "unlisted"   # flip to "public" in repo Secrets once you trust the output
         run: python main.py

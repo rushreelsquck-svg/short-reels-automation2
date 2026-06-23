@@ -213,9 +213,12 @@ limits for a once-a-day video.
 
 ## Customizing
 
-- **Topic source**: `scripts/fetch_trend.py` uses Google News RSS. Swap the
-  feed URL for a specific topic (e.g. `/rss/headlines/section/topic/TECHNOLOGY`)
-  if you want a niche instead of general news.
+- **Topic source**: this repo is already set to a finance/money niche via
+  `NEWS_TOPIC_QUERY` in `daily-short.yml` (a Google News search query, not the
+  general top-stories feed). Edit that line directly to narrow or widen it —
+  e.g. add `OR cryptocurrency` or remove `side hustle` if it's pulling stories
+  that don't fit. Leave `NEWS_TOPIC_QUERY` unset entirely to go back to
+  general top headlines.
 - **Voice quality**: `scripts/generate_audio.py` uses free gTTS. For a much
   better voice, swap in ElevenLabs or Azure TTS (both are simple REST calls) —
   keep the same function signature so nothing else needs to change.
