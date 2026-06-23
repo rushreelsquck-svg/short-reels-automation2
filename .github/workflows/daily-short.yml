@@ -42,7 +42,8 @@ jobs:
           NEWS_LANGUAGE: "en"
           NEWS_TOPIC_QUERY: "personal finance OR investing OR side hustle OR money saving tips OR passive income"
           YT_CATEGORY_ID: "25"
-          YT_PRIVACY_STATUS: "unlisted"   # flip to "public" in repo Secrets once you trust the output
+          YT_PRIVACY_STATUS: "scheduled"   # uploads private, auto-goes-public after the delay below
+          YT_PUBLISH_DELAY_HOURS: "3"      # gives you a window to catch anything before it's public
         run: python main.py
 
       # Commits the updated "already used this headline" tracker back to the repo

@@ -21,8 +21,9 @@ status, OAuth publishing) directly affect whether this works at all.
   and hashtags help discovery, they don't manufacture demand.
 - ❌ Does **not** scrape or re-upload anyone else's video/footage. It writes an
   original script about a news event, which is what keeps it copyright-clean.
-- ⚠️ Runs unattended once set up, but **start with `YT_PRIVACY_STATUS=unlisted`**
-  (already the default) and watch a few outputs before flipping it to `public`.
+- ⚠️ Runs unattended once set up. Default mode is `YT_PRIVACY_STATUS=scheduled`,
+  which uploads private and auto-publishes a few hours later — see "Choosing
+  how videos go public" below for what that actually means and the other options.
   YouTube has also tightened policy on mass-produced/repetitive "faceless"
   channels — keep an eye on your channel's monetization status if that matters
   to you, and consider occasionally customizing the format so it doesn't look
@@ -178,16 +179,27 @@ subscription — each video costs roughly a fraction of a cent in API usage.
 ## Step 5: Test it manually before trusting the schedule
 
 Go to your repo's **Actions** tab → "Daily Trending Short" → **Run workflow**.
-Watch the log. If it succeeds, check the unlisted video on your channel
-before changing anything to public. Common first-run issues:
+Watch the log. If it succeeds, check the video on your channel (YouTube
+Studio → Content, it'll show as private) before trusting later runs. Common
+first-run issues:
 
 - `gTTSError` → usually a transient rate limit from the free TTS endpoint; rerun.
 - `invalid_grant` on upload → refresh token expired (see the 7-day trap above) or wasn't copied correctly.
 - Pexels step silently skipped → fine, it just falls back to the gradient background if no key/clip is found.
 
-Once you're happy with the output, go back to repo Secrets and you can leave
-`YT_PRIVACY_STATUS` as `unlisted` permanently, or change the default in the
-workflow file to `public` once you trust it.
+### Choosing how videos go public
+
+`YT_PRIVACY_STATUS` in the workflow file controls this — three options:
+
+- **`"scheduled"`** (current default): uploads as private, then YouTube
+  automatically flips it to public after `YT_PUBLISH_DELAY_HOURS` (default 3).
+  This is the YouTube API's actual mechanism for scheduling — it requires
+  uploading as private with a `publishAt` timestamp, there's no way around
+  that. **While waiting, the video is private**, not unlisted — not even
+  viewable via a shared link, only by you in YouTube Studio.
+- **`"unlisted"`**: stays unlisted forever until you manually change it in
+  YouTube Studio. No auto-publish, but viewable via direct link immediately.
+- **`"public"`**: goes live immediately, no review window at all.
 
 ---
 

@@ -3,7 +3,19 @@ upload_video.py
 Uploads the finished MP4 to YouTube as a Short using a stored refresh token
 (no browser/interactive login needed — this is what lets it run unattended
 inside GitHub Actions).
+
+YT_PRIVACY_STATUS supports an extra value beyond YouTube's own "public" /
+"unlisted" / "private": set it to "scheduled" to upload as private with a
+publishAt timestamp — YouTube then auto-flips it to public on its own at that
+time, no manual step needed. (This is a YouTube API requirement, not our
+choice: publishAt only takes effect when privacyStatus is "private".) How far
+in the future that is controlled by YT_PUBLISH_DELAY_HOURS (default 3).
+
+Note: while waiting to go live, the video is actually *private* — not
+unlisted — so it won't open via a shared link either; only visible by signing
+into YouTube Studio.
 """
+import datetime
 import os
 
 from google.oauth2.credentials import Credentials
@@ -25,6 +37,24 @@ def _get_authenticated_service():
     return build("youtube", "v3", credentials=creds)
 
 
+def _build_status_body():
+    privacy_status = os.environ.get("YT_PRIVACY_STATUS", "unlisted")
+
+    if privacy_status == "scheduled":
+        delay_hours = float(os.environ.get("YT_PUBLISH_DELAY_HOURS", "3"))
+        publish_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=delay_hours)
+        return {
+            "privacyStatus": "private",  # required by YouTube's API for publishAt to take effect
+            "publishAt": publish_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "selfDeclaredMadeForKids": False,
+        }
+
+    return {
+        "privacyStatus": privacy_status,
+        "selfDeclaredMadeForKids": False,
+    }
+
+
 def upload_short(video_path: str, title: str, description: str, tags: list[str]) -> str:
     youtube = _get_authenticated_service()
 
@@ -35,10 +65,7 @@ def upload_short(video_path: str, title: str, description: str, tags: list[str])
             "tags": tags,
             "categoryId": os.environ.get("YT_CATEGORY_ID", "25"),  # 25 = News & Politics
         },
-        "status": {
-            "privacyStatus": os.environ.get("YT_PRIVACY_STATUS", "unlisted"),
-            "selfDeclaredMadeForKids": False,
-        },
+        "status": _build_status_body(),
     }
 
     media = MediaFileUpload(video_path, mimetype="video/mp4", resumable=True)
@@ -52,6 +79,8 @@ def upload_short(video_path: str, title: str, description: str, tags: list[str])
 
     video_id = response["id"]
     print(f"Uploaded: https://youtube.com/shorts/{video_id}")
+    if "publishAt" in body["status"]:
+        print(f"Scheduled to go public at: {body['status']['publishAt']}")
     return video_id
 
 
