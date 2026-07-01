@@ -38,6 +38,8 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_API_KEY: ${{ secrets.YT_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_TTS_VOICE: "echo"
           NEWS_REGION: "US"
           NEWS_LANGUAGE: "en"
           NEWS_TOPIC_QUERY: "personal finance OR investing OR side hustle OR money saving tips OR passive income"
