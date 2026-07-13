@@ -213,7 +213,7 @@ def build_video(script_text, audio_path, output_path, visual_queries=None):
         caption_clips.append(clip)
         t += seg_duration
 
-    outro_png = _render_caption_png("Follow for daily trending recaps")
+    outro_png = _render_caption_png("Follow for more money and finance news every day.")
     caption_clips.append(
         ImageClip(outro_png)
         .set_start(voice.duration + 0.2)
