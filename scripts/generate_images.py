@@ -1,6 +1,7 @@
 """
 generate_images.py
-Generates one AI image per scene using OpenAI's gpt-image-1 at high quality.
+Generates one AI image per scene using dall-e-3 at hd quality.
+Portrait format 1024x1792 — closest to 9:16 vertical video.
 """
 import base64
 import os
@@ -10,16 +11,15 @@ from pathlib import Path
 import requests
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
-OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "high")
+OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-3")
+OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "hd")
 
 MAX_RETRIES = 3
 BASE_DELAY = 10
-MAX_PROMPT_CHARS = 900  # gpt-image-1 limit is 1000 — leave headroom
+MAX_PROMPT_CHARS = 3900  # dall-e-3 supports up to 4000 chars
 
 
 def generate_scene_image(prompt: str, output_path: str) -> str:
-    # Truncate prompt if too long
     if len(prompt) > MAX_PROMPT_CHARS:
         prompt = prompt[:MAX_PROMPT_CHARS].rsplit(" ", 1)[0]
         print(f"Prompt truncated to {len(prompt)} chars")
@@ -37,7 +37,7 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
                     "model": OPENAI_IMAGE_MODEL,
                     "prompt": prompt,
                     "n": 1,
-                    "size": "1024x1536",
+                    "size": "1024x1792",
                     "quality": OPENAI_IMAGE_QUALITY,
                     "response_format": "b64_json",
                 },
@@ -76,8 +76,8 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
 if __name__ == "__main__":
     generate_scene_image(
         "Cinematic photorealistic film still, dramatic side lighting. "
-        "A 40-year-old woman in a grey blazer, expression of shock, "
-        "staring at a laptop screen. Cold blue office lighting, Sony A7.",
+        "A 40-year-old man in a suit, expression of grief and shock, "
+        "holding a letter with shaking hands. Warm amber lighting, Sony A7.",
         "/tmp/test_drama_scene.png"
     )
     print("Saved /tmp/test_drama_scene.png")
