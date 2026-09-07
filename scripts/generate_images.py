@@ -2,7 +2,6 @@
 generate_images.py
 Generates one AI image per scene using dall-e-3 at hd quality.
 """
-import base64
 import os
 import time
 from pathlib import Path
@@ -23,8 +22,6 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
         prompt = prompt[:MAX_PROMPT_CHARS].rsplit(" ", 1)[0]
         print(f"Prompt truncated to {len(prompt)} chars")
 
-    print(f"Sending image prompt ({len(prompt)} chars): {prompt[:120]}...")
-
     last_error = None
     for attempt in range(MAX_RETRIES):
         try:
@@ -40,7 +37,6 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
                     "n": 1,
                     "size": "1024x1792",
                     "quality": OPENAI_IMAGE_QUALITY,
-                    "response_format": "b64_json",
                 },
                 timeout=180,
             )
@@ -53,16 +49,17 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
                 continue
 
             if not resp.ok:
-                # Print full error body so we can see exactly what OpenAI says
                 print(f"OpenAI error {resp.status_code}: {resp.text}")
                 resp.raise_for_status()
 
-            image_data = resp.json()["data"][0]["b64_json"]
-            image_bytes = base64.b64decode(image_data)
+            # Download image from returned URL
+            image_url = resp.json()["data"][0]["url"]
+            image_resp = requests.get(image_url, timeout=60)
+            image_resp.raise_for_status()
 
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "wb") as f:
-                f.write(image_bytes)
+                f.write(image_resp.content)
 
             print(f"Image generated: {Path(output_path).name}")
             return output_path
@@ -80,8 +77,8 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
 if __name__ == "__main__":
     generate_scene_image(
         "Cinematic photorealistic film still, dramatic side lighting. "
-        "A 40-year-old man in a suit, expression of grief, "
-        "holding a letter. Warm amber lighting, Sony A7.",
+        "A 40-year-old man in a suit holding a letter with shaking hands. "
+        "Warm amber lighting, shallow depth of field.",
         "/tmp/test_drama_scene.png"
     )
     print("Saved /tmp/test_drama_scene.png")
