@@ -1,6 +1,7 @@
 import datetime
 import os
 import re
+import unicodedata
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -38,13 +39,11 @@ def _build_status_body():
 
 
 def _sanitize_tags(tags: list[str]) -> list[str]:
-    import unicodedata
     cleaned = []
     for tag in tags:
-        tag = unicodedata.normalize("NFKD", tag)
-        tag = re.sub(r'[<>&"\'\`\#\u2018\u2019\u201c\u201d\u2014\u2013\u2026]', '', tag)
+        tag = unicodedata.normalize("NFKD", str(tag))
         tag = re.sub(r'[^\x00-\x7F]', '', tag)
-        tag = tag.strip()
+        tag = re.sub(r'[<>&"\'\`\#]', '', tag).strip()
         if tag and len(tag) <= 100:
             cleaned.append(tag)
     return cleaned
