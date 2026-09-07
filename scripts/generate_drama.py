@@ -73,7 +73,11 @@ This EXACT character_description must be copy-pasted word-for-word into the star
 EVERY scene's image_prompt. Only the action and setting change.
 
 IMAGE PROMPT FORMAT (for every scene):
-"Cinematic photorealistic film still, 9:16 vertical portrait format, [lighting type].
+"IMPORTANT: Keep each image_prompt under 900 characters total including the
+character description. Be specific but brief — "dramatic side lighting,
+shock on her face, laptop screen glow" beats a paragraph of description.
+
+Cinematic photorealistic film still, 9:16 vertical portrait format, [lighting type].
 [PASTE CHARACTER DESCRIPTION WORD FOR WORD]. [What character is doing, where, emotional
 expression, key props in frame]. Shot on Sony A7, shallow depth of field, [color grade]."
 
