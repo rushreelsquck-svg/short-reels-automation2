@@ -86,7 +86,7 @@ DRAMA_TOOL = {
         "type": "object",
         "properties": {
             "premise": {"type": "string", "description": "One-sentence summary to avoid repeating"},
-            "title": {"type": "string", "description": "<=95 chars. Specific and dramatic. Lead with the most gripping detail."},
+            "title": {"type": "string", "description": "<=95 chars. SEO-optimized. Include a specific dollar amount when the story has one (e.g. '$3 Million', '$80,000'). Use proven patterns: 'He Made $X and Lost It All', 'She Found $X in [place]. Then [consequence].', 'They Offered Him $X. He Said No.', 'She Was a Millionaire at 29. Broke by 31.' Lead with the most dramatic specific detail — never a vague tease."},
             "description": {"type": "string", "description": "2-3 sentences teasing the story without spoiling the twist, plus a follow nudge"},
             "tags": {"type": "array", "items": {"type": "string"}, "description": "8-12 lowercase tags"},
             "hashtags": {"type": "array", "items": {"type": "string"}, "description": "5-8 hashtags, always include #shorts"},
