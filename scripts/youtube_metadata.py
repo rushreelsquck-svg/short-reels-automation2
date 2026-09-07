@@ -1,11 +1,5 @@
 """
 youtube_metadata.py — The Uptick (Drama about Money)
-Merges story-specific tags with trending keywords and trims to YouTube limits.
-
-Changes from news version:
-  - Removed topic parameter (no news source needed for generative drama)
-  - Updated fallback tags to money/drama SEO keywords
-  - Description no longer includes source link
 """
 import re
 import unicodedata
@@ -16,9 +10,9 @@ MAX_DESCRIPTION_CHARS = 4800
 
 
 def _sanitize_tag(tag: str) -> str:
-    tag = unicodedata.normalize("NFKD", tag)
-    tag = re.sub(r'[<>&"\'\`\#\u2018\u2019\u201c\u201d\u2014\u2013\u2026]', '', tag)
+    tag = unicodedata.normalize("NFKD", str(tag))
     tag = re.sub(r'[^\x00-\x7F]', '', tag)
+    tag = re.sub(r'[<>&"\'\`\#]', '', tag)
     tag = ' '.join(tag.split())
     return tag.strip()[:100]
 
@@ -50,18 +44,14 @@ def build_final_metadata(video: dict, trending_keywords: list[str]) -> dict:
 
     combined_tags = _dedupe_preserve_order(
         video.get("tags", []) + trending_keywords + [
-            # Core genre
             "money story", "money drama", "financial story", "rich story",
             "millionaire story", "wealth story", "money confession",
             "shocking money story", "money struggles", "financial drama",
-            # Story archetypes
             "rags to riches", "poor to rich", "lost everything", "found money",
             "greed story", "betrayal story", "success story", "failure story",
             "unexpected money", "lottery story", "inheritance drama",
-            # Search intent
             "storytime", "story time", "short story", "dramatic story",
             "emotional story", "life story",
-            # Algorithm
             "shorts", "motivation", "inspiration", "money motivation",
             "wealth mindset", "financial freedom",
         ]
