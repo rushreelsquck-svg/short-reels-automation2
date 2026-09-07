@@ -1,7 +1,6 @@
 """
 generate_images.py
 Generates one AI image per scene using dall-e-3 at hd quality.
-Portrait format 1024x1792 — closest to 9:16 vertical video.
 """
 import base64
 import os
@@ -16,13 +15,15 @@ OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "hd")
 
 MAX_RETRIES = 3
 BASE_DELAY = 10
-MAX_PROMPT_CHARS = 3900  # dall-e-3 supports up to 4000 chars
+MAX_PROMPT_CHARS = 3900
 
 
 def generate_scene_image(prompt: str, output_path: str) -> str:
     if len(prompt) > MAX_PROMPT_CHARS:
         prompt = prompt[:MAX_PROMPT_CHARS].rsplit(" ", 1)[0]
         print(f"Prompt truncated to {len(prompt)} chars")
+
+    print(f"Sending image prompt ({len(prompt)} chars): {prompt[:120]}...")
 
     last_error = None
     for attempt in range(MAX_RETRIES):
@@ -46,12 +47,15 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
 
             if resp.status_code == 429:
                 delay = BASE_DELAY * (2 ** attempt)
-                print(f"Image API rate limited, retrying in {delay}s...")
+                print(f"Rate limited, retrying in {delay}s...")
                 time.sleep(delay)
                 last_error = resp.status_code
                 continue
 
-            resp.raise_for_status()
+            if not resp.ok:
+                # Print full error body so we can see exactly what OpenAI says
+                print(f"OpenAI error {resp.status_code}: {resp.text}")
+                resp.raise_for_status()
 
             image_data = resp.json()["data"][0]["b64_json"]
             image_bytes = base64.b64decode(image_data)
@@ -76,8 +80,8 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
 if __name__ == "__main__":
     generate_scene_image(
         "Cinematic photorealistic film still, dramatic side lighting. "
-        "A 40-year-old man in a suit, expression of grief and shock, "
-        "holding a letter with shaking hands. Warm amber lighting, Sony A7.",
+        "A 40-year-old man in a suit, expression of grief, "
+        "holding a letter. Warm amber lighting, Sony A7.",
         "/tmp/test_drama_scene.png"
     )
     print("Saved /tmp/test_drama_scene.png")
