@@ -1,8 +1,6 @@
 """
-main.py
-Runs the whole daily pipeline end to end. This is what the GitHub Actions
-workflow calls. Each stage prints progress so failures are easy to spot in
-the Actions log.
+main.py — The Uptick (Drama about Money)
+Fully generative — no news fetching needed.
 """
 import json
 import os
@@ -10,47 +8,80 @@ import sys
 import traceback
 from pathlib import Path
 
-from fetch_trend import get_trending_topic
-from fetch_youtube_trending_tags import get_trending_keywords
-from generate_script import generate_script_package
+from generate_drama import generate_drama_video
 from generate_audio import generate_voiceover
 from build_video import build_video
+from fetch_youtube_trending_tags import get_trending_keywords
 from youtube_metadata import build_final_metadata
 from upload_video import upload_short
 from upload_facebook import upload_reel
 
-WORKDIR = Path("/tmp/trend_short_run")
+WORKDIR = Path("/tmp/drama_run")
 
 
 def run():
-    region = os.environ.get("NEWS_REGION", "US")
-    language = os.environ.get("NEWS_LANGUAGE", "en")
-    topic_query = os.environ.get("NEWS_TOPIC_QUERY")
+    print("[1/5] Writing today's money drama (Claude)...")
+    video = generate_drama_video()
+    print(f"      -> {video['title']}  ({len(video['beats'])} beats)")
 
-    print(f"[1/6] Fetching today's trending topic ({region}/{language})" + (f', query="{topic_query}"' if topic_query else "") + "...")
-    topic = get_trending_topic(region=region, language=language, topic_query=topic_query)
-    print(f"      -> {topic['title']}")
+    WORKDIR.mkdir(parents=True, exist_ok=True)
+    scenes = []
 
-    print("[2/6] Fetching real YouTube trending keywords for hashtag enrichment...")
-    trending_keywords = get_trending_keywords(region=region)
+    print("[2/5] Generating voiceover for hook, beats, and close...")
+
+    hook_audio = str(WORKDIR / "scene_hook.mp3")
+    generate_voiceover(video["hook"], hook_audio)
+    scenes.append({
+        "audio_path": hook_audio,
+        "visual_query": video.get("hook_visual_query"),
+        "caption_text": video["hook"],
+        "number": None,
+        "caption_position": "top",
+    })
+
+    for i, beat in enumerate(video["beats"]):
+        audio_path = str(WORKDIR / f"scene_{i}.mp3")
+        generate_voiceover(beat["narration"], audio_path)
+        scenes.append({
+            "audio_path": audio_path,
+            "visual_query": beat["visual_query"],
+            "caption_text": beat["narration"],
+            "number": None,
+            "caption_position": "bottom",
+        })
+
+    close_audio = str(WORKDIR / "scene_close.mp3")
+    generate_voiceover(video["close"], close_audio)
+    scenes.append({
+        "audio_path": close_audio,
+        "visual_query": video.get("close_visual_query", "person looking out window thinking"),
+        "caption_text": video["close"],
+        "number": None,
+        "caption_position": "bottom",
+    })
+
+    outro_audio = str(WORKDIR / "scene_outro.mp3")
+    generate_voiceover("Follow for more money stories every single day.", outro_audio)
+    scenes.append({
+        "audio_path": outro_audio,
+        "visual_query": "city skyline aerial view night lights",
+        "caption_text": "Follow for more money stories every single day.",
+        "number": None,
+        "caption_position": "bottom",
+    })
+
+    print(f"      -> {len(scenes)} scenes ready")
+
+    print("[3/5] Building the video...")
+    video_path = str(WORKDIR / "output.mp4")
+    build_video(scenes, video_path)
+
+    print("[4/5] Fetching trending keywords...")
+    trending_keywords = get_trending_keywords(region=os.environ.get("NEWS_REGION", "US"))
     print(f"      -> {len(trending_keywords)} keywords found")
 
-    print("[3/6] Writing original script + title + description + tags (Claude)...")
-    script_package = generate_script_package(topic, trending_keywords)
-    print(f"      -> Title: {script_package['title']}")
-
-    print("[4/6] Generating voiceover...")
-    WORKDIR.mkdir(parents=True, exist_ok=True)
-    audio_path = str(WORKDIR / "voice.mp3")
-    generate_voiceover(script_package["script"], audio_path)
-
-    print("[5/6] Building the video...")
-    video_path = str(WORKDIR / "output.mp4")
-    visual_queries = script_package.get("visual_queries", [])
-    build_video(script_package["script"], audio_path, video_path, visual_queries=visual_queries)
-
-    print("[6/6] Uploading to YouTube...")
-    final_meta = build_final_metadata(script_package, trending_keywords, topic)
+    print("[5/5] Uploading to YouTube...")
+    final_meta = build_final_metadata(video, trending_keywords)
     video_id = upload_short(
         video_path=video_path,
         title=final_meta["title"],
