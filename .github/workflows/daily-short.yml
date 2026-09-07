@@ -39,6 +39,8 @@ jobs:
           YT_API_KEY: ${{ secrets.YT_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_IMAGE_MODEL: "dall-e-3"
+          OPENAI_IMAGE_QUALITY: "hd"
           OPENAI_TTS_VOICE: "echo"
           NEWS_REGION: "US"
           YT_CATEGORY_ID: "25"
