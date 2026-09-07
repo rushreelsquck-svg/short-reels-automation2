@@ -1,4 +1,4 @@
-name: The Uptick - Daily Money Trend
+name: The Uptick - Daily Money Drama
 
 on:
   schedule:
@@ -41,8 +41,6 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_TTS_VOICE: "echo"
           NEWS_REGION: "US"
-          NEWS_LANGUAGE: "en"
-          NEWS_TOPIC_QUERY: "personal finance OR investing OR side hustle OR money saving tips OR passive income"
           YT_CATEGORY_ID: "25"
           YT_PRIVACY_STATUS: "scheduled"   # uploads private, auto-goes-public after the delay below
           YT_PUBLISH_DELAY_HOURS: "3"      # gives you a window to catch anything before it's public
