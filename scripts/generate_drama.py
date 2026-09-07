@@ -1,7 +1,6 @@
 """
-generate_drama.py — The Uptick (Drama about Money)
-Generates original short dramatic stories about money — greed, unexpected wealth,
-devastating loss, betrayal, redemption, and impossible choices.
+generate_drama.py — The Uptick (Drama about Money) with AI scene images
+Per-scene AI image prompts with character consistency across all scenes.
 """
 import json
 import os
@@ -32,7 +31,6 @@ STORY_ARCHETYPES = [
     "A business that succeeded for the wrong reasons",
     "A debt that changed the course of someone's life",
     "Someone who refused money that would have changed everything",
-    "A financial crime where the real victim surprises you",
     "The hidden cost of sudden wealth",
 ]
 
@@ -52,46 +50,67 @@ SYSTEM_PROMPT = """You write scripts for a YouTube Shorts channel called The Upt
 which tells original short dramatic stories about money — greed, unexpected wealth,
 devastating loss, betrayal, redemption, and impossible choices.
 
-These are fictional but feel completely real — like something that could actually happen.
-Think of the style as: dramatic voiceover narration, third person, short punchy sentences,
-building tension beat by beat toward a twist or satisfying resolution.
+Fictional but feels completely real. Style: dramatic voiceover narration, third person,
+short punchy sentences, building tension toward a twist or resolution.
 
 CONTENT RULES:
-- Stories must be entirely original — not based on any real named person or actual event
-- No real names, no real companies, no real places beyond generic (a city, a bank, a firm)
-- Dramatic but not gratuitous — focus on the emotional and financial stakes, not violence
-- Every story needs a clear protagonist, a money-related conflict, and a resolution
-- The best stories have a detail that reframes everything — a twist nobody saw coming
+- Entirely original — no real named people, companies, or specific places
+- Dramatic but not gratuitous — emotional and financial stakes, not violence
+- Clear protagonist, money-related conflict, resolution with a twist
 
 STRUCTURE:
-1. HOOK (1-2 sentences): Start in the middle of the drama — the most gripping moment first.
-2. BEATS (5-6): Each beat 1-2 sentences — background, escalation, crisis, turn, resolution.
-3. CLOSE (1 sentence): The final sting or moral that stays with the viewer.
+1. HOOK (1-2 sentences): Start in the middle of the drama — most gripping moment first
+2. BEATS (5-6): 1-2 sentences each advancing the story
+3. CLOSE (1 sentence): The final sting or moral
 
-NARRATION STYLE:
-- Third person. Short sentences. Dramatic.
-- Target 30-40 seconds spoken aloud.
+TARGET: 30-40 seconds spoken aloud.
 
-VISUAL QUERIES — specific and literal:
-- "stack of hundred dollar bills close up", "luxury penthouse interior", "person holding
-  head in hands at desk", "empty office after layoff", "two people arguing in office",
-  "lawyer reviewing documents", "person staring at phone waiting"
+CHARACTER CONSISTENCY (most important for image quality):
+First define the main character visually — be specific:
+"A 38-year-old South Asian woman with shoulder-length black hair, wearing a grey blazer
+and white blouse, sharp eyes, no jewelry except small gold earrings"
+This EXACT character_description must be copy-pasted word-for-word into the start of
+EVERY scene's image_prompt. Only the action and setting change.
+
+IMAGE PROMPT FORMAT (for every scene):
+"Cinematic photorealistic film still, 9:16 vertical portrait format, [lighting type].
+[PASTE CHARACTER DESCRIPTION WORD FOR WORD]. [What character is doing, where, emotional
+expression, key props in frame]. Shot on Sony A7, shallow depth of field, [color grade]."
+
+Lighting and color grade examples by scene mood:
+- Discovery/shock: "harsh fluorescent office lighting, cold blue-white color grade"
+- Tension/conflict: "dramatic side lighting, deep shadows, desaturated color grade"
+- Loss/grief: "overcast natural light, muted warm tones, shallow focus"
+- Resolution/turn: "golden hour window light, warm amber color grade"
+- Triumph/relief: "bright natural light, slightly lifted exposure"
+
+TITLE STRATEGY (SEO-critical):
+- Include specific dollar amount: "$3 Million", "$80,000", "$500K"
+- Proven patterns: "He Made $X and Lost It All", "She Found $X. Then [consequence]."
+- Under 70 characters for mobile
 
 Call the submit_drama_video tool exactly once."""
 
 DRAMA_TOOL = {
     "name": "submit_drama_video",
-    "description": "Submit the finished money drama story.",
+    "description": "Submit the finished money drama with per-scene AI image prompts.",
     "input_schema": {
         "type": "object",
         "properties": {
             "premise": {"type": "string", "description": "One-sentence summary to avoid repeating"},
-            "title": {"type": "string", "description": "<=95 chars. SEO-optimized. Include a specific dollar amount when the story has one (e.g. '$3 Million', '$80,000'). Use proven patterns: 'He Made $X and Lost It All', 'She Found $X in [place]. Then [consequence].', 'They Offered Him $X. He Said No.', 'She Was a Millionaire at 29. Broke by 31.' Lead with the most dramatic specific detail — never a vague tease."},
-            "description": {"type": "string", "description": "2-3 sentences teasing the story without spoiling the twist, plus a follow nudge"},
-            "tags": {"type": "array", "items": {"type": "string"}, "description": "8-12 lowercase tags"},
-            "hashtags": {"type": "array", "items": {"type": "string"}, "description": "5-8 hashtags. Always include #shorts and #moneystory. Add relevant ones from: #moneydrama #richpeople #financialstory #wealthstory #moneymotivation #storytime #dramaticstory #greed #betrayal #rags2riches"},
+            "title": {"type": "string", "description": "<=95 chars. Include dollar amount. Dramatic and specific."},
+            "description": {"type": "string", "description": "2-3 sentences teasing story without spoiling twist, plus follow nudge with keywords: money stories, financial drama, wealth confession"},
+            "tags": {"type": "array", "items": {"type": "string"}, "description": "8-12 lowercase tags: money story, drama, greed, betrayal, rags to riches, millionaire, shocking, storytime, etc."},
+            "hashtags": {"type": "array", "items": {"type": "string"}, "description": "5-8 hashtags, always include #shorts and #moneystory"},
+            "character_description": {
+                "type": "string",
+                "description": "Specific visual description of main character: age, hair color/style, skin tone, clothing, distinguishing features. This exact text goes word-for-word into every image_prompt."
+            },
             "hook": {"type": "string", "description": "1-2 sentences. Start in the middle of the drama."},
-            "hook_visual_query": {"type": "string", "description": "Specific literal stock-footage phrase for hook"},
+            "hook_image_prompt": {
+                "type": "string",
+                "description": "Full cinematic prompt: start with format/lighting, paste character_description word for word, then scene-specific action/emotion/setting/props."
+            },
             "beats": {
                 "type": "array",
                 "minItems": 5,
@@ -100,16 +119,17 @@ DRAMA_TOOL = {
                     "type": "object",
                     "properties": {
                         "narration": {"type": "string", "description": "1-2 sentences advancing the story"},
-                        "visual_query": {"type": "string", "description": "Specific literal stock-footage phrase"},
+                        "image_prompt": {"type": "string", "description": "Full cinematic prompt with character_description pasted word for word, plus scene-specific details"},
                     },
-                    "required": ["narration", "visual_query"],
+                    "required": ["narration", "image_prompt"],
                 },
             },
-            "close": {"type": "string", "description": "One final sentence — the moral, the sting, or the reflection"},
-            "close_visual_query": {"type": "string", "description": "Specific literal stock-footage phrase for close"},
+            "close": {"type": "string", "description": "One final sentence — the moral or sting"},
+            "close_image_prompt": {"type": "string", "description": "Full cinematic prompt for close scene"},
         },
         "required": ["premise", "title", "description", "tags", "hashtags",
-                     "hook", "hook_visual_query", "beats", "close", "close_visual_query"],
+                     "character_description", "hook", "hook_image_prompt",
+                     "beats", "close", "close_image_prompt"],
     },
 }
 
@@ -138,7 +158,7 @@ def generate_drama_video() -> dict:
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2000,
+        max_tokens=2500,
         system=SYSTEM_PROMPT,
         tools=[DRAMA_TOOL],
         tool_choice={"type": "tool", "name": "submit_drama_video"},
@@ -148,12 +168,11 @@ def generate_drama_video() -> dict:
 
 {avoid_text}
 
-Story archetype for inspiration: "{archetype}"
+Story archetype: "{archetype}"
+Hook style inspiration (adapt — don't copy): "{hook_example}"
 
-Example hook style (adapt this energy — don't copy it): "{hook_example}"
-
-Start in the middle of the drama. Short sentences. One twist that reframes everything.
-Target: 30-40 seconds spoken aloud.""",
+Short sentences. One twist. 30-40 seconds.
+Copy character_description word-for-word into every image_prompt.""",
         }],
     )
 
