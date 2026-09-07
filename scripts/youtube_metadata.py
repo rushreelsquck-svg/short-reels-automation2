@@ -8,6 +8,7 @@ Changes from news version:
   - Description no longer includes source link
 """
 import re
+import unicodedata
 
 MAX_TAGS_CHARS = 480
 MAX_TITLE_CHARS = 95
@@ -15,7 +16,9 @@ MAX_DESCRIPTION_CHARS = 4800
 
 
 def _sanitize_tag(tag: str) -> str:
-    tag = re.sub(r'[<>&"\'\#]', '', tag)
+    tag = unicodedata.normalize("NFKD", tag)
+    tag = re.sub(r'[<>&"\'\`\#\u2018\u2019\u201c\u201d\u2014\u2013\u2026]', '', tag)
+    tag = re.sub(r'[^\x00-\x7F]', '', tag)
     tag = ' '.join(tag.split())
     return tag.strip()[:100]
 
