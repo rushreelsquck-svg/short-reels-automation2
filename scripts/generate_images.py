@@ -1,8 +1,7 @@
 """
 generate_images.py
 Calls OpenAI's image API to generate one AI image per scene.
-Uses gpt-image-1-mini at low quality by default — cheap enough
-(under $0.02 per image) for daily automation.
+Uses dall-e-3 at standard quality — about $0.04 per image.
 """
 import base64
 import os
@@ -11,15 +10,11 @@ from pathlib import Path
 import requests
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1-mini")
-OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "low")
+OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-3")
+OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "standard")
 
 
 def generate_scene_image(prompt: str, output_path: str) -> str:
-    """
-    Generate one image from a text prompt and save it as PNG.
-    Returns the output path on success, raises on failure.
-    """
     resp = requests.post(
         "https://api.openai.com/v1/images/generations",
         headers={
@@ -30,7 +25,7 @@ def generate_scene_image(prompt: str, output_path: str) -> str:
             "model": OPENAI_IMAGE_MODEL,
             "prompt": prompt,
             "n": 1,
-            "size": "1024x1792",  # portrait 9:16 ratio
+            "size": "1024x1792",
             "quality": OPENAI_IMAGE_QUALITY,
             "response_format": "b64_json",
         },
