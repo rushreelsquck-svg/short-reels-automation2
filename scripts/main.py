@@ -3,8 +3,10 @@ main.py — The Uptick (Drama about Money) with AI scene images
 """
 import json
 import os
+import re
 import sys
 import traceback
+import unicodedata
 from pathlib import Path
 
 from generate_drama import generate_drama_video
@@ -19,6 +21,17 @@ from upload_facebook import upload_reel
 WORKDIR = Path("/tmp/drama_run")
 
 
+def _clean_tags(tags):
+    cleaned = []
+    for tag in tags:
+        tag = unicodedata.normalize("NFKD", str(tag))
+        tag = re.sub(r'[^\x00-\x7F]', '', tag)
+        tag = re.sub(r'[<>&"\'\`\#]', '', tag).strip()
+        if tag and len(tag) <= 100:
+            cleaned.append(tag)
+    return cleaned
+
+
 def run():
     print("[1/5] Writing today's money drama (Claude)...")
     video = generate_drama_video()
@@ -29,7 +42,6 @@ def run():
 
     print("[2/5] Generating AI images and voiceover per scene...")
 
-    # Hook
     hook_image = str(WORKDIR / "scene_hook.png")
     hook_audio = str(WORKDIR / "scene_hook.mp3")
     generate_scene_image(video["hook_image_prompt"], hook_image)
@@ -42,7 +54,6 @@ def run():
     })
     print("      -> hook done")
 
-    # Beats
     for i, beat in enumerate(video["beats"]):
         image_path = str(WORKDIR / f"scene_{i}.png")
         audio_path = str(WORKDIR / f"scene_{i}.mp3")
@@ -56,7 +67,6 @@ def run():
         })
         print(f"      -> beat {i+1}/{len(video['beats'])} done")
 
-    # Close
     close_image = str(WORKDIR / "scene_close.png")
     close_audio = str(WORKDIR / "scene_close.mp3")
     generate_scene_image(video["close_image_prompt"], close_image)
@@ -68,7 +78,6 @@ def run():
         "caption_position": "bottom",
     })
 
-    # Outro — reuse close image
     outro_audio = str(WORKDIR / "scene_outro.mp3")
     generate_voiceover("Follow for more money stories every single day.", outro_audio)
     scenes.append({
@@ -94,7 +103,7 @@ def run():
         video_path=video_path,
         title=final_meta["title"],
         description=final_meta["description"],
-        tags=final_meta["tags"],
+        tags=_clean_tags(final_meta["tags"]),
     )
 
     print("[Cross-post] Posting to Facebook as a Reel...")
