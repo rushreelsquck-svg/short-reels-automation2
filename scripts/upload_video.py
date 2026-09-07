@@ -1,15 +1,3 @@
-"""
-upload_video.py
-Uploads the finished MP4 to YouTube as a Short using a stored refresh token
-(no browser/interactive login needed — this is what lets it run unattended
-inside GitHub Actions).
-
-YT_PRIVACY_STATUS supports an extra value beyond YouTube's own "public" /
-"unlisted" / "private": set it to "scheduled" to upload as private with a
-publishAt timestamp — YouTube then auto-flips it to public on its own at that
-time, no manual step needed. How far in the future is controlled by
-YT_PUBLISH_DELAY_HOURS (default 3).
-"""
 import datetime
 import os
 import re
@@ -35,7 +23,6 @@ def _get_authenticated_service():
 
 def _build_status_body():
     privacy_status = os.environ.get("YT_PRIVACY_STATUS", "unlisted")
-
     if privacy_status == "scheduled":
         delay_hours = float(os.environ.get("YT_PUBLISH_DELAY_HOURS", "3"))
         publish_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=delay_hours)
@@ -44,7 +31,6 @@ def _build_status_body():
             "publishAt": publish_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "selfDeclaredMadeForKids": False,
         }
-
     return {
         "privacyStatus": privacy_status,
         "selfDeclaredMadeForKids": False,
@@ -52,13 +38,13 @@ def _build_status_body():
 
 
 def _sanitize_tags(tags: list[str]) -> list[str]:
-    """
-    YouTube rejects tags containing: < > & " ' #
-    Strip those characters and drop any tag that ends up empty or over 100 chars.
-    """
+    import unicodedata
     cleaned = []
     for tag in tags:
-        tag = re.sub(r'[<>&"\'\#]', '', tag).strip()
+        tag = unicodedata.normalize("NFKD", tag)
+        tag = re.sub(r'[<>&"\'\`\#\u2018\u2019\u201c\u201d\u2014\u2013\u2026]', '', tag)
+        tag = re.sub(r'[^\x00-\x7F]', '', tag)
+        tag = tag.strip()
         if tag and len(tag) <= 100:
             cleaned.append(tag)
     return cleaned
@@ -66,7 +52,6 @@ def _sanitize_tags(tags: list[str]) -> list[str]:
 
 def upload_short(video_path: str, title: str, description: str, tags: list[str]) -> str:
     youtube = _get_authenticated_service()
-
     body = {
         "snippet": {
             "title": title,
@@ -76,16 +61,13 @@ def upload_short(video_path: str, title: str, description: str, tags: list[str])
         },
         "status": _build_status_body(),
     }
-
     media = MediaFileUpload(video_path, mimetype="video/mp4", resumable=True)
     request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
-
     response = None
     while response is None:
         status, response = request.next_chunk()
         if status:
             print(f"Upload progress: {int(status.progress() * 100)}%")
-
     video_id = response["id"]
     print(f"Uploaded: https://youtube.com/shorts/{video_id}")
     if "publishAt" in body["status"]:
